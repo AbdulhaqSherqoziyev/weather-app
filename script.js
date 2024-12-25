@@ -3,7 +3,7 @@ const getWeatherBtn = document.getElementById("getWeatherBtn");
 const resultDiv = document.getElementById("result");
 
 async function getWeather(city) {
-  const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`;
+  const url = `https://api.openweathermap.org/data/2.5/forecast/daily?q=${city}&cnt=7&appid=${apiKey}&units=metric`;
   try {
     const response = await fetch(url);
     if (!response.ok) throw new Error("City not found");
@@ -44,7 +44,6 @@ function updateBackground(condition) {
   }
 }
 
-
 window.onload = () => {
   updateBackground("default");
 };
@@ -59,13 +58,19 @@ getWeatherBtn.addEventListener("click", async () => {
   resultDiv.innerHTML = "Loading...";
   const weatherData = await getWeather(city);
   if (weatherData) {
-    const { main, weather, name } = weatherData;
-    resultDiv.innerHTML = `
-            <strong>${name}</strong><br>
-            Temperature: ${main.temp}°C<br>
-            Condition: ${weather[0].description}
-        `;
-    updateBackground(weather[0].main); 
+    const { city: { name }, list } = weatherData;
+    let forecastHtml = `<strong>${name}</strong><br>`;
+    list.forEach(day => {
+      forecastHtml += `
+        <div>
+          Date: ${new Date(day.dt * 1000).toLocaleDateString()}<br>
+          Temperature: ${day.temp.day}°C<br>
+          Condition: ${day.weather[0].description}<br>
+        </div>
+      `;
+    });
+    resultDiv.innerHTML = forecastHtml;
+    updateBackground(list[0].weather[0].main);
   } else {
     resultDiv.innerHTML = "City not found. Please try again!";
   }
